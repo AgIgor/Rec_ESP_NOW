@@ -1,16 +1,20 @@
 #include <esp_now.h>
 #include <WiFi.h>
+#include <ESP32Servo.h>
+
+#define servoA_pin 13
+#define servoB_pin 12
+Servo myservoA;
+Servo myservoB;
 
 #define LED_BUILTIN 2
 
-uint8_t broadcastAddress[] = {0x40,0x22,0xD8,0x5F,0xF7,0xFC};
-//mac aberto 0x58,0xBF,0x25,0x81,0x3E,0x98
+//uint8_t broadcastAddress[] = {0x40,0x22,0xD8,0x5F,0xF7,0xFC};// mac metalico
+//uint8_t broadcastAddress[] = {0x58,0xBF,0x25,0x81,0x3E,0x98};//mac aberto 
 
 // Definir a estrutura para o pacote de dados
 typedef struct struct_message {
-  char data[32];
-  int counter;
-  long int millis;
+  int servoA, servoB;
   bool led;
 } struct_message;
 
@@ -28,13 +32,12 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
       Serial.print(mac[i], HEX);
       Serial.print(":");
   } */
-      
-  //Serial.print("\n\nData: ");
-  //Serial.println(myData.data);
-  //Serial.print("Counter: ");
-  //Serial.println(myData.counter);
-  //Serial.print("Millis: ");
-  Serial.println(myData.millis);
+
+  Serial.println(myData.servoA);
+  Serial.println(myData.servoB);
+
+  myservoA.write(myData.servoA);
+  myservoB.write(myData.servoB);
   //Serial.println();
 }//end OnDataSent
 
@@ -42,6 +45,19 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN,OUTPUT);
   digitalWrite(LED_BUILTIN,LOW);
+
+  ESP32PWM::allocateTimer(0);
+	ESP32PWM::allocateTimer(1);
+	ESP32PWM::allocateTimer(2);
+	ESP32PWM::allocateTimer(3);
+  myservoA.setPeriodHertz(50);
+  myservoB.setPeriodHertz(50);
+  myservoA.attach(servoA_pin, 600, 2400);
+  myservoB.attach(servoB_pin, 600, 2400);
+
+  myservoA.write(0);
+  myservoB.write(0);
+
   WiFi.mode(WIFI_STA);
   Serial.print("WiFi.macAddress: ");
   Serial.println(WiFi.macAddress());
